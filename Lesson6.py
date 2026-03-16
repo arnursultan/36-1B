@@ -8,23 +8,24 @@ from PyQt6.QtWidgets import (
 )
 
 class Database:
-    def __init__(self):
 
-        self.conn = sqlite3.connect("db.db")
+    def __init__(self):
+        self.conn = sqlite3.connect("agents.db")
         self.cursor = self.conn.cursor()
 
         self.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS agents (
+        CREATE TABLE IF NOT EXISTS agents(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             level INTEGER
         )
         """)
+
         self.conn.commit()
 
     def add_agent(self, name, level):
         self.cursor.execute(
-            "INSERT INTO agents (name, level) VALUES (?, ?)",
+            "INSERT INTO agents(name, level) VALUES (?,?)",
             (name, level)
         )
         self.conn.commit()
@@ -34,18 +35,22 @@ class Database:
         return self.cursor.fetchall()
 
     def search_agent(self, text):
-        self.cursor.execute("SELECT * FROM agents WHERE name LIKE ?",
-                            ("%" + text + "%")
-                            )
+        self.cursor.execute(
+            "SELECT * FROM agents WHERE name LIKE ?",
+            ("%" + text + "%",)
+        )
         return self.cursor.fetchall()
 
     def delete_agent(self, agent_id):
-        self.cursor.execute("DELETE FROM agent WHERE id = ?",
-                            (agent_id,)
-                            )
+        self.cursor.execute(
+            "DELETE FROM agents WHERE id=?",
+            (agent_id,)
+        )
         self.conn.commit()
 
+
 class MainWindow(QWidget):
+
     def __init__(self):
         super().__init__()
 
@@ -59,25 +64,26 @@ class MainWindow(QWidget):
         self.load_agents()
 
     def setup_ui(self):
+
         layout = QVBoxLayout()
 
-        self.title = QLabel("ACCESS TERMINAL")
+        self.title = QLabel("ТЕРМИНАЛ ДОСТУПА")
         self.title.setStyleSheet("font-size:22px;")
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Agent name")
+        self.name_input.setPlaceholderText("Имя агента")
 
         self.level_input = QLineEdit()
-        self.level_input.setPlaceholderText("Level")
+        self.level_input.setPlaceholderText("Уровень")
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search agent")
+        self.search_input.setPlaceholderText("Поиск агента")
 
         btn_layout = QHBoxLayout()
 
-        self.add_btn = QPushButton("Add agent")
-        self.search_btn = QPushButton("Scan")
-        self.delete_btn = QPushButton("Delete")
+        self.add_btn = QPushButton("ДОБАВИТЬ")
+        self.search_btn = QPushButton("ПОИСК")
+        self.delete_btn = QPushButton("УДАЛИТЬ")
 
         btn_layout.addWidget(self.add_btn)
         btn_layout.addWidget(self.search_btn)
@@ -97,19 +103,22 @@ class MainWindow(QWidget):
         self.setStyleSheet("""
         QWidget{
             background:black;
-            color:#00ff00
+            color:#00ff00;
             font-family:Courier;
         }
+
         QLineEdit{
             background:black;
             border:1px solid #00ff00;
             padding:5px;
         }
+
         QPushButton{
             background:black;
             border:1px solid #00ff00;
             padding:6px;
         }
+
         QListWidget{
             background:black;
             border:1px solid #00ff00;
@@ -118,40 +127,44 @@ class MainWindow(QWidget):
 
         self.add_btn.clicked.connect(self.add_agent)
         self.search_btn.clicked.connect(self.search_agent)
-        self.delete_btn.clicked_connect(self.delete_agent)
+        self.delete_btn.clicked.connect(self.delete_agent)
         self.list_widget.itemClicked.connect(self.select_agent)
 
     def load_agents(self):
+
         self.list_widget.clear()
+
         agents = self.db.get_agents()
+
         for agent in agents:
-            text = f"{agent[0]} :: {agent[1]} :: level{agent[2]}"
+            text = f"{agent[0]} :: {agent[1]} :: уровень {agent[2]}"
             self.list_widget.addItem(text)
 
     def add_agent(self):
+
         name = self.name_input.text()
         level = self.level_input.text()
 
         if not name or not level:
-            QMessageBox.warning(self, "Ошибка", "Enter Data")
+            QMessageBox.warning(self, "ОШИБКА", "ВВЕДИТЕ ДАННЫЕ")
             return
 
         if not level.isdigit():
-            QMessageBox.warning(self, "Ошибка", "Level Must Be Number")
+            QMessageBox.warning(self, "ОШИБКА", "УРОВЕНЬ ДОЛЖЕН БЫТЬ ЧИСЛОМ")
             return
 
         self.db.add_agent(name, int(level))
 
         messages = [
             "Агент зарегистрирован",
-            "Доступ предоставлен",
+            "Доступ разрешён",
             "Новый агент добавлен",
             "База данных обновлена"
         ]
 
         QMessageBox.information(
             self,
-            "Система",
+            "СИСТЕМА",
             random.choice(messages)
         )
 
@@ -161,17 +174,70 @@ class MainWindow(QWidget):
         self.load_agents()
 
     def search_agent(self):
-        text = self.search_input.text()
-        agents = self.db.search_agents(text)
-        self.list_widget.clear()
-        for agent in agents:
-            text = f"{agent[0]} :: {agent[1]} :: level{agent[2]}"
 
+        text = self.search_input.text()
+
+        agents = self.db.search_agent(text)
+
+        self.list_widget.clear()
+
+        for agent in agents:
+            text = f"{agent[0]} :: {agent[1]} :: уровень {agent[2]}"
             self.list_widget.addItem(text)
 
         QMessageBox.information(
             self,
-            "Результат Скана",
-            f"Найдено {len(agent)} Агентов"
+            "РЕЗУЛЬТАТ СКАНИРОВАНИЯ",
+            f"НАЙДЕНО АГЕНТОВ: {len(agents)}"
         )
 
+    def select_agent(self, item):
+
+        data = item.text().split(" :: ")
+        self.selected_id = int(data[0])
+
+    def delete_agent(self):
+
+        if self.selected_id is None:
+
+            QMessageBox.warning(
+                self,
+                "СИСТЕМА",
+                "ВЫБЕРИТЕ АГЕНТА"
+            )
+            return
+
+        confirm = QMessageBox.question(
+            self,
+            "СИСТЕМА",
+            "УДАЛИТЬ АГЕНТА?"
+        )
+
+        if confirm == QMessageBox.StandardButton.Yes:
+
+            self.db.delete_agent(self.selected_id)
+
+            phrases = [
+                "Агент удалён",
+                "Запись уничтожена",
+                "Цель устранена",
+                "База данных очищена"
+            ]
+
+            QMessageBox.information(
+                self,
+                "СИСТЕМА",
+                random.choice(phrases)
+            )
+
+            self.selected_id = None
+
+            self.load_agents()
+
+
+app = QApplication(sys.argv)
+
+window = MainWindow()
+window.show()
+
+sys.exit(app.exec())
