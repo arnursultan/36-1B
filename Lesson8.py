@@ -4,7 +4,8 @@ from PyQt6.QtWidgets import (
     QPushButton, QTableWidget, QTableWidgetItem,
     QComboBox, QLineEdit, QLabel, QMessageBox
 )
-from Lesson8db_logic import get_products, get_categories, add_product
+
+from Lesson8db_logic import get_products, get_categories, add_product, create_tables
 
 
 class App(QWidget):
@@ -26,9 +27,8 @@ class App(QWidget):
         self.input_price.setPlaceholderText("Цена")
 
         self.combo = QComboBox()
-        self.load_categories()
 
-        self.btn_load = QPushButton("Загрузить данные")
+        self.btn_load = QPushButton("Обновить")
         self.btn_load.clicked.connect(self.load_data)
 
         self.btn_add = QPushButton("Добавить")
@@ -50,9 +50,19 @@ class App(QWidget):
 
         self.setLayout(layout)
 
+        self.load_categories()
+        self.load_data()
+
     def load_categories(self):
+        self.combo.clear()
+
         categories = get_categories()
+
+        if not categories:
+            print("Нет категорий в БД")
+
         for cat in categories:
+            print("Добавляю категорию:", cat)
             self.combo.addItem(cat[1], cat[0])
 
     def load_data(self):
@@ -75,6 +85,11 @@ class App(QWidget):
         if not price.isdigit():
             QMessageBox.warning(self, "Ошибка", "Цена должна быть числом")
             return
+
+        if category_id is None:
+            QMessageBox.warning(self, "Ошибка", "Выберите категорию")
+            return
+
         add_product(name, int(price), category_id)
 
         QMessageBox.information(self, "Успех", "Товар добавлен")
@@ -83,7 +98,10 @@ class App(QWidget):
         self.input_name.clear()
         self.input_price.clear()
 
+
 if __name__ == "__main__":
+    create_tables()
+
     app = QApplication(sys.argv)
     window = App()
     window.show()

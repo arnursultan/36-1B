@@ -1,17 +1,54 @@
 from Lesson8db import get_connection
 
 
-def get_products():
+def create_tables():
     conn = get_connection()
-    if conn is None:
-        return []
-
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
-                SELECT p.id, p.name, p.price, c.name
+                CREATE TABLE IF NOT EXISTS categories (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL
+                )
+            """)
+
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS products (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    price INTEGER NOT NULL,
+                    category_id INTEGER REFERENCES categories(id)
+                )
+            """)
+
+            # Проверяем категории (НЕ products!)
+            cursor.execute("SELECT COUNT(*) FROM categories")
+            count = cursor.fetchone()[0]
+
+            if count == 0:
+                cursor.execute("""
+                    INSERT INTO categories (name) VALUES 
+                    ('Электроника'),
+                    ('Одежда'),
+                    ('Еда')
+                """)
+
+        conn.commit()
+    except Exception as e:
+        print("Ошибка create_tables:", e)
+        conn.rollback()
+    finally:
+        conn.close()
+
+
+def get_products():
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT p.id, p.name, p.price, COALESCE(c.name, 'Без категории')
                 FROM products p
-                JOIN categories c ON p.category_id = c.id
+                LEFT JOIN categories c ON p.category_id = c.id
                 ORDER BY p.id
             """)
             return cursor.fetchall()
@@ -24,13 +61,12 @@ def get_products():
 
 def get_categories():
     conn = get_connection()
-    if conn is None:
-        return []
-
     try:
         with conn.cursor() as cursor:
             cursor.execute("SELECT id, name FROM categories ORDER BY id")
-            return cursor.fetchall()
+            result = cursor.fetchall()
+            print("Категории из БД:", result)  # DEBUG
+            return result
     except Exception as e:
         print("Ошибка get_categories:", e)
         return []
@@ -40,9 +76,6 @@ def get_categories():
 
 def add_product(name, price, category_id):
     conn = get_connection()
-    if conn is None:
-        return
-
     try:
         with conn.cursor() as cursor:
             cursor.execute(
