@@ -21,7 +21,6 @@ def create_tables():
                 )
             """)
 
-            # Проверяем категории (НЕ products!)
             cursor.execute("SELECT COUNT(*) FROM categories")
             count = cursor.fetchone()[0]
 
