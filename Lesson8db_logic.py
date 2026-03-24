@@ -64,7 +64,7 @@ def get_categories():
         with conn.cursor() as cursor:
             cursor.execute("SELECT id, name FROM categories ORDER BY id")
             result = cursor.fetchall()
-            print("Категории из БД:", result)  # DEBUG
+            print("Категории из БД:", result)
             return result
     except Exception as e:
         print("Ошибка get_categories:", e)
