@@ -1,8 +1,9 @@
 from pathlib import Path
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY =
+SECRET_KEY = 'django-insecure-7mg0kc_f)8$++e-kv39rxe7%q)kyzh!_++&vo8uer97bw3@d^8'
 
 DEBUG = True
 
@@ -17,6 +18,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
 
     "accounts",
 ]
