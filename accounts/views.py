@@ -15,7 +15,7 @@ from urllib.parse import urlencode
 from django.conf import settings
 
 GOOGLE_AUTH_URL     = "https://accounts.google.com/o/oauth2/v2/auth"
-GOOGLE_TOKEN_URL    = "https://accounts.google.com/token"
+GOOGLE_TOKEN_URL    = "https://oauth2.googleapis.com/token"
 GOOGLE_USER_URL     = "https://www.googleapis.com/oauth2/v3/userinfo"
 
 
@@ -127,7 +127,10 @@ class GoogleOAuthCallbackView(APIView):
 
         if token_response.status_code != 200:
             return Response(
-                {"detail": "Ошибка при получении токена от Google."},
+                {
+                    "google_status": token_response.status_code,
+                    "google_response": token_response.text,
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
