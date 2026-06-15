@@ -1,9 +1,8 @@
-from venv import create
-
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
+
 
 from .serializers import RegisterSerializer, UserSerializer
 from .permissions import IsTeacherOrAdmin, IsOwnerOrAdmin
@@ -169,11 +168,3 @@ class GoogleOAuthCallbackView(APIView):
             "refresh": str(refresh),
             "user": UserSerializer(user).data,
         })
-
-
-    from django.views.decorators.cache import cache_page
-    from django.utils.decorators import method_decorator
-
-    @method_decorator(cache_page(60 * 15), name="get")
-    class ListView(generics.ListAPIView):
-        queryset = .objects.all()
