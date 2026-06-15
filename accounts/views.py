@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-
+from django.core.cache import cache
 
 from .serializers import RegisterSerializer, UserSerializer
 from .permissions import IsTeacherOrAdmin, IsOwnerOrAdmin
@@ -28,7 +28,10 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         user = serializer.save()
+
+        cache.delete("users:all")
 
         refresh = RefreshToken.for_user(user)
 
@@ -52,9 +55,25 @@ class MeView(APIView):
         return Response(serializer.data)
 
 class UserListView(generics.ListAPIView):
-    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsTeacherOrAdmin]
+
+    def list(self, request, *args, **kwargs):
+        cache_key = "users:all"
+
+        data = cache.get(cache_key)
+
+        if not data:
+            users = User.objects.all()
+            data = UserSerializer(users,many=True).data
+
+            cache.set(
+                cache_key,
+                data,
+                timeout=60 * 15
+            )
+
+        return Response(data)
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
@@ -65,6 +84,14 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
         obj = super().get_object()
         self.check_object_permissions(self.request, obj)
         return obj
+
+    def perform_update(self, serializer):
+        serializer.save()
+        cache.delete("users:all")
+
+    def perform_destroy(self, instance):
+        cache.delete("users:all")
+        instance.delete()
 
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
