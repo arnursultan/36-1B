@@ -92,7 +92,7 @@ class GoogleOAuthRedirectView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        params = urlencode({
+        params = urlencode({ #https://accounts.google.com/0/oauth2/v2/auth
             "client_id": settings.GOOGLE_OAUTH_CLIENT_ID,
             "redirect_uri": settings.GOOGLE_OAUTH_REDIRECT_URI,
             "response_type": "code",
@@ -106,7 +106,7 @@ class GoogleOAuthCallbackView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        code = request.query_params.get("code")
+        code = request.query_params.get("code") # ?code=abc123
 
         if not code:
             return Response(
@@ -169,3 +169,11 @@ class GoogleOAuthCallbackView(APIView):
             "refresh": str(refresh),
             "user": UserSerializer(user).data,
         })
+
+
+    from django.views.decorators.cache import cache_page
+    from django.utils.decorators import method_decorator
+
+    @method_decorator(cache_page(60 * 15), name="get")
+    class ListView(generics.ListAPIView):
+        queryset = .objects.all()
