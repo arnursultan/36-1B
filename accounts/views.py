@@ -70,7 +70,7 @@ class UserListView(generics.ListAPIView):
             cache.set(
                 cache_key,
                 data,
-                timeout=60 * 15
+                timeout=60 * 1
             )
 
         return Response(data)
