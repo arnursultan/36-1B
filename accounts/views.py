@@ -13,6 +13,8 @@ import requests
 from urllib.parse import urlencode
 from django.conf import settings
 
+from .tasks import send_welcome_email
+
 GOOGLE_AUTH_URL     = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL    = "https://oauth2.googleapis.com/token"
 GOOGLE_USER_URL     = "https://www.googleapis.com/oauth2/v3/userinfo"
@@ -28,18 +30,16 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         user = serializer.save()
 
-        cache.delete("users:all")
+        send_welcome_email.delay(user.email, user.full_name)
 
         refresh = RefreshToken.for_user(user)
-
         return Response({
             "user": UserSerializer(user).data,
             "access": str(refresh.access_token),
             "refresh": str(refresh),
-        }
+        }, status=status.HTTP_201_CREATED
         )
 
 class MeView(APIView):
