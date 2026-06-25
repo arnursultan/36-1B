@@ -21,9 +21,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    'drf-spectacular',
-
     'django_celery_beat',
 
     "rest_framework",
@@ -31,6 +28,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
 
     "accounts",
+    'drf_spectacular',
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
