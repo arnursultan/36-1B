@@ -22,6 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'drf-spectacular',
+
     'django_celery_beat',
 
     "rest_framework",
@@ -100,7 +102,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ]
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -181,11 +184,19 @@ JAZZMIN_UI_TWEAKS = {
     # "theme" : "sketchy",
     # "theme" : "spacelab",
     # "theme" : "united",
-    "theme" : "yeti",
+    # "theme" : "yeti",
     #  Dark themes
     # "theme": "darkly",
-    # "theme" : "slate",
+    "theme" : "slate",
     # "theme" : "cyborg",
     # "theme" : "solar",
     # "theme" : "superhero",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Geeks Backend API",
+
+    "DESCRIPTION": "Group 36-1B",
+
+    "VERSION": "1.0.0",
 }
